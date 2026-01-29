@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>routeElectriqueAPI</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <!-- lien pour avoir la carte, leaflet utilise aussi openstreetmap -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    crossorigin=""
+  />
+</head>
+<body>
+  <header class="header">
+    <h1>La route électrique</h1>
+  </header>
+
+  <main class="container">
+
+    <form id="formCity">
+      <label for="strtCtyName">Indiquez votre ville de départ :</label></br>
+      <input id="startCity" name="startCity" value="" /> </br>
+      <label for="endCtyName">Indiquez votre ville d'arrivée :</label></br>
+      <input id="endCity" name="endCity" value="" /> </br>
+      <input type="submit" value="Calculer l'itinéraire" />
+    </form>
+
+  </main>
+
+  <div id="map"></div>
+
+
+  <!-- initialisation de leaflet pour afficher la carte, exécuté en premier donc mis avant les autres scripts -->
+  <!-- on fait des clusters de marquers pour pouvoir mieux les effacer après -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    crossorigin=""
+  ></script>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+  />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+
+  <!-- fonctions qui appellent l'api qu'on a créé -->
+  <script>
+  // initialise la carte, centrée sur paris par défaut (L = leaflet)
+  const map = L.map('map').setView([48.8566, 2.3522], 13);
+
+  // affichage de la map : mention obligatoire de openstreetmap et paramètre de zoom max pour l'user
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  
+  // *** formulaire pour les villes -> avoir l'ininéraire ***
+  var formCity = document.getElementById("formCity");
+  // on crée des clusters de marker pour pouvoir mieux les gérer en groupe 
+  var markers = L.markerClusterGroup();
+  // on ajoute à la carte ses markers (un nouveau calque) pour afficher l'itinéraire (pointeurs/flèches)
+  map.addLayer(markers);
+  // variable globale pour le chemin de l'itinéraire et son style (route)
+  var pathStyle = null;
+
+  // différente couleur pour les makers 
+  // pour les bornes 
+  var greenIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+  // pour l'arrivée 
+  var redIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  // événement du formulaire 'formCity'
+  formCity.addEventListener("submit", async (event) => {
+    event.preventDefault() // ne reload pas la page, permet de voir le trajet
+    console.log("on a cliqué sur le bouton submit itinéraire");
+
+    // on récupère les valeurs entrées dans le formulaire 
+    var startCity = document.getElementById("startCity").value;
+    var endCity = document.getElementById("endCity").value;
+
+    // on appelle les fonctions async en appelant l'api globale (celle qu'on a crée)
+    try {
+      // * on récupère les informations qu'on a besoin *
+      // on récupère les coordonnées géographiques des villes d'arrivée et de départ
+      var startPt = await findPtFromCity(startCity);
+      var endPt = await findPtFromCity(endCity);
+      // on récupère l'itinéraire (pour l'instant sans les bornes)
+      var path = await findPath(startPt, endPt); // TODO -> faire en sorte que le path donne l'itinéraire avec les brones en plus 
+
+      // * on affiche la route de l'itinéraire *
+      // on enlève le précédent itinéraire (le calque)
+      if (pathStyle) {map.removeLayer(pathStyle);} // attention, il ne fonctionne pas si pathStyle est null (surement car )
+      // on affiche un chemin et son style à la map 
+      pathStyle = L.geoJSON(path, {style: { color: "blueviolet", weight: 4 }}).addTo(map);
+      // on recadre l'itinéraire (le chemin) pour avoir un meilleur visuel dessus
+      map.fitBounds(pathStyle.getBounds());
+
+      // * on affiche les markers (pointeurs/flèches) de l'itinéraire *
+      // on clear le précédent itinéraire (le calque) pour qu'il n'y ait plus rien dans le groupe
+      markers.clearLayers();
+      // on crée les pointeurs/flèches pour l'arrivée et le départ 
+      var marker1 = L.marker([startPt[0], startPt[1]]);
+      var marker2 = L.marker([endPt[0], endPt[1]], {icon: redIcon});
+      // on ajoute ces markers au groupe/cluster de marker 
+      markers.addLayer(marker1);
+      markers.addLayer(marker2);
+
+    } catch (err) { // gestion d'erreur 
+      result.textContent = "Erreur lors de l’appel API (itinéraire). veuillez réessayer."; // ICI 
+      var message = "Erreur lors de l’appel API (itinéraire). Veuillez réessayer. \nL'erreur renvoyée est la suivante : " + err;
+      alert(message); 
+    }
+  });
+
+  // permet d'appeler l'api qu'on a crée et de renvoyer les coordonnées géographiques de la ville passée en paramètre (nominatim, openstreetmap)
+  async function findPtFromCity(city) {
+    // on appelle l'api et on récupère le résultat 
+    var res = await fetch(`/api/APIcity/${encodeURIComponent(city)}`); // encodeURIComponent permet de transformer le city en string compatible
+    // gestion d'erreur 
+    if (!res.ok) { throw new Error("Ville introuvable. Veuillez réessayer."); }
+    // on met la réponse sous forme de json pour mieux la lire 
+    var data = await res.json();
+    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de al ville
+    return [data.latitude, data.longitude];
+  }
+
+  // permet d'appeler l'api qu'on a crée et de renvoyer l'itinéraire entre le point de départ et d'arrivée (openrouteservice)
+  async function findPath(startPt, endPt) {
+    // on appelle l'api et on récupère le résultat 
+    var res = await fetch("/api/APIpath", {             // le lien 
+      method: "POST",                                   // la méthode de transmission de donnée (post ici)
+      headers: { "Content-Type": "application/json" },  // le header utile pour faire la méthode post
+      body: JSON.stringify({startPt, endPt})            // les données passées dans la méthode post, ici les points de départ et d'arrivée 
+    });
+    // gestion d'erreur 
+    if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); }
+    // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
+    var data = await res.json();
+    return data;
+  }
+
+
+  // TODO : 
+  // - faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
+
+</script>
+</body>
+</html>
