@@ -141,7 +141,7 @@
     if (!res.ok) { throw new Error("Ville introuvable. Veuillez réessayer."); }
     // on met la réponse sous forme de json pour mieux la lire 
     var data = await res.json();
-    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de al ville
+    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
     return [data.latitude, data.longitude];
   }
 
@@ -157,12 +157,20 @@
     if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); }
     // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
     var data = await res.json();
+    console.log(data["features"][0]["properties"]["summary"]["distance"]); // le nb de m entre le point de départ et d'arrivé
     return data;
   }
 
 
   // TODO : 
   // - faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
+  // - lier le soap 
+  // - faire avec les bornes 
+  // - voir comment avoir le point de l'itinéraire après un certain nb de km après le départ / au autre point 
+  // - faire attention de ne pas dépasser l'autonomie de la voiture 
+  // o faire en sorte de recalculer l'itinéraire après avoir toutes les bornes
+  // - faire avec l'api des voitures 
+  // - mettre des popup pour les erreurs 
 
 </script>
 </body>

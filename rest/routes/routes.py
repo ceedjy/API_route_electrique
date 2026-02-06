@@ -45,7 +45,7 @@ def city(city):
 @route_bp.post("/APIpath")
 def path():
     data = request.json # on recupère la requette passée en entrée du post pour avoir les datas  
-    startPt = data["startPt"]
+    startPt = data["startPt"] # pour les bornes, ptetre mettre en param un tableau de points dans l'ordre
     endPt = data["endPt"]
 
     # l'url de l'api 
@@ -61,7 +61,8 @@ def path():
     params = {
         "coordinates": [
             [startPt[1], startPt[0]],
-            [endPt[1], endPt[0]]
+            [endPt[1], endPt[0]], 
+            #[5.8357, 50.7640] -> if suffit de rajouter les bornes dans l'ordre
         ]
     }
 
