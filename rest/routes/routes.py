@@ -86,7 +86,7 @@ def borne():
     autonomie10 = autonomie * 10 / 100
     # tant qu'il reste du chemin à parcourir 
     while(indice < len(tabPath)-2):
-        # on va chercher le point où on est à 80% de l'autonomie de la voiture 
+        # on va chercher le point où on est à 90% de l'autonomie de la voiture 
         tempDist = 0 # distance temporaire pour faire la comparaison 
         while(tempDist < autonomie80 and indice < (len(tabPath)-2)):
             indice += 1 

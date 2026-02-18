@@ -101,6 +101,8 @@
     // pour le chargement 
     const loader = document.querySelector(".loader");
     loader.classList.remove("loader-hidden");
+    const container = document.querySelector(".container");
+    container.classList.add("loader-hidden");
     
     // on récupère les valeurs entrées dans le formulaire 
     var startCity = document.getElementById("startCity").value;
@@ -149,6 +151,7 @@
 
     // pour enlever le chargement
     loader.classList.add("loader-hidden");
+    container.classList.remove("loader-hidden");
 
   });
 
