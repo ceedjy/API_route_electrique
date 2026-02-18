@@ -31,6 +31,8 @@
 
   </main>
 
+  <div class="loader loader-hidden"></div>
+
   <div id="map"></div>
 
 
@@ -95,8 +97,11 @@
   // événement du formulaire 'formCity'
   formCity.addEventListener("submit", async (event) => {
     event.preventDefault() // ne reload pas la page, permet de voir le trajet
-    console.log("on a cliqué sur le bouton submit itinéraire");
-
+    
+    // pour le chargement 
+    const loader = document.querySelector(".loader");
+    loader.classList.remove("loader-hidden");
+    
     // on récupère les valeurs entrées dans le formulaire 
     var startCity = document.getElementById("startCity").value;
     var endCity = document.getElementById("endCity").value;
@@ -141,6 +146,10 @@
       var message = "Erreur lors de l’appel API (itinéraire). Veuillez réessayer. \nL'erreur renvoyée est la suivante : " + err;
       alert(message); 
     }
+
+    // pour enlever le chargement
+    loader.classList.add("loader-hidden");
+
   });
 
   // permet d'appeler l'api qu'on a crée et de renvoyer les coordonnées géographiques de la ville passée en paramètre (nominatim, openstreetmap)
@@ -192,12 +201,12 @@
 
 
   // TODO : 
-  // - faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
+  // x faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
   // - lier le soap 
-  // - faire avec les bornes 
-  // - voir comment avoir le point de l'itinéraire après un certain nb de km après le départ / au autre point 
-  // - faire attention de ne pas dépasser l'autonomie de la voiture 
-  // o faire en sorte de recalculer l'itinéraire après avoir toutes les bornes
+  // x faire avec les bornes 
+  // x voir comment avoir le point de l'itinéraire après un certain nb de km après le départ / au autre point 
+  // x faire attention de ne pas dépasser l'autonomie de la voiture 
+  // x faire en sorte de recalculer l'itinéraire après avoir toutes les bornes
   // - faire avec l'api des voitures 
   // - mettre des popup pour les erreurs 
 
