@@ -24,6 +24,8 @@
       <input id="startCity" name="startCity" value="" /> </br>
       <label for="endCtyName">Indiquez votre ville d'arrivée :</label></br>
       <input id="endCity" name="endCity" value="" /> </br>
+      <label for="carAutoName">Indiquez l'autonomie de la voiture en km :</label></br>
+      <input id="carAuto" name="carAuto" value="" /> </br>
       <input type="submit" value="Calculer l'itinéraire" />
     </form>
 
@@ -98,6 +100,7 @@
     // on récupère les valeurs entrées dans le formulaire 
     var startCity = document.getElementById("startCity").value;
     var endCity = document.getElementById("endCity").value;
+    var carAuto = document.getElementById("carAuto").value;
 
     // on appelle les fonctions async en appelant l'api globale (celle qu'on a crée)
     try {
@@ -106,7 +109,9 @@
       var startPt = await findPtFromCity(startCity);
       var endPt = await findPtFromCity(endCity);
       // on récupère l'itinéraire (pour l'instant sans les bornes)
-      var path = await findPath(startPt, endPt); // TODO -> faire en sorte que le path donne l'itinéraire avec les brones en plus 
+      tabTemp = await findPath(startPt, endPt, carAuto); 
+      path = tabTemp[0];
+      tabBorne = tabTemp[1];
 
       // * on affiche la route de l'itinéraire *
       // on enlève le précédent itinéraire (le calque)
@@ -115,7 +120,7 @@
       pathStyle = L.geoJSON(path, {style: { color: "blueviolet", weight: 4 }}).addTo(map);
       // on recadre l'itinéraire (le chemin) pour avoir un meilleur visuel dessus
       map.fitBounds(pathStyle.getBounds());
-
+      
       // * on affiche les markers (pointeurs/flèches) de l'itinéraire *
       // on clear le précédent itinéraire (le calque) pour qu'il n'y ait plus rien dans le groupe
       markers.clearLayers();
@@ -125,6 +130,11 @@
       // on ajoute ces markers au groupe/cluster de marker 
       markers.addLayer(marker1);
       markers.addLayer(marker2);
+      // on crée et ajoute les pointeurs pour les bornes 
+      for(i = 0; i < tabBorne.length; i++){
+        markerTemp = L.marker([tabBorne[i][1], tabBorne[i][0]], {icon: greenIcon});
+        markers.addLayer(markerTemp);
+      }
 
     } catch (err) { // gestion d'erreur 
       result.textContent = "Erreur lors de l’appel API (itinéraire). veuillez réessayer."; // ICI 
@@ -146,19 +156,38 @@
   }
 
   // permet d'appeler l'api qu'on a crée et de renvoyer l'itinéraire entre le point de départ et d'arrivée (openrouteservice)
-  async function findPath(startPt, endPt) {
-    // on appelle l'api et on récupère le résultat 
+  async function findPath(startPt, endPt, carAuto) {
+    // * on appelle l'api et on récupère le résultat *
+    var bornePts = [] // une variable vide pour les borne car il n'y en a pas encore
     var res = await fetch("/api/APIpath", {             // le lien 
       method: "POST",                                   // la méthode de transmission de donnée (post ici)
       headers: { "Content-Type": "application/json" },  // le header utile pour faire la méthode post
-      body: JSON.stringify({startPt, endPt})            // les données passées dans la méthode post, ici les points de départ et d'arrivée 
+      body: JSON.stringify({startPt, endPt, bornePts})  // les données passées dans la méthode post, ici les points de départ et d'arrivée et les bornes
     });
-    // gestion d'erreur 
-    if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); }
-    // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
-    var data = await res.json();
-    console.log(data["features"][0]["properties"]["summary"]["distance"]); // le nb de m entre le point de départ et d'arrivé
-    return data;
+    if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); } // gestion d'erreur 
+    var data = await res.json(); // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
+    var tabPath = data["features"][0]["geometry"]["coordinates"]; // tableau de tous les points qui constituent le chemin 
+    
+    // * on appelle l'api qui va chercher toutes les bornes entre le point de départ et d'arrivée *
+    var res = await fetch("/api/APIborne", {            
+      method: "POST",
+      headers: { "Content-Type": "application/json" },  // le header utile pour faire la méthode post
+      body: JSON.stringify({carAuto, tabPath}) // changer ça pour prendre en param le start, le end et le carauto et le 
+    });
+    if (!res.ok) { throw new Error("Api de borne inaccessible."); } // gestion d'erreur 
+    borne = await res.json(); // on retourne le résultat de la borne sous forme de json  
+
+    // * on rapelle l'api pour avoir le path avec en plus toutes les bornes *
+    bornePts = borne;
+    var res = await fetch("/api/APIpath", {             // le lien 
+      method: "POST",                                   // la méthode de transmission de donnée (post ici)
+      headers: { "Content-Type": "application/json" },  // le header utile pour faire la méthode post
+      body: JSON.stringify({startPt, endPt, bornePts}) // les données passées dans la méthode post, ici les points de départ et d'arrivée et les bornes
+    });
+    if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); } // gestion d'erreur 
+    var data = await res.json(); // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
+    
+    return [data, bornePts];
   }
 
 

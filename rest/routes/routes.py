@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, current_app
 import requests
+import math as mt
 
 route_bp = Blueprint("route_bp", __name__)
 main_bp = Blueprint("main", __name__)
@@ -45,8 +46,9 @@ def city(city):
 @route_bp.post("/APIpath")
 def path():
     data = request.json # on recupère la requette passée en entrée du post pour avoir les datas  
-    startPt = data["startPt"] # pour les bornes, ptetre mettre en param un tableau de points dans l'ordre
+    startPt = data["startPt"] # TODO pour les bornes, ptetre mettre en param un tableau de points dans l'ordre
     endPt = data["endPt"]
+    bornePts = data["bornePts"]
 
     # l'url de l'api 
     url = "https://api.openrouteservice.org/v2/directions/driving-car/geojson"
@@ -57,13 +59,12 @@ def path():
         "Content-Type": "application/json"
     }
 
-    # les paramètres d'entrée, on veut le point de départ et le point d'arrivée avec des coordonnées (latitude et longitude inversés car c'est ce que demande l'api)
+    # les paramètres d'entrée, on veut les points de passage dans l'ordre avec en premier le point de départ et en dernier le point d'arrivée (latitude et longitude inversés car c'est ce que demande l'api)
+    bornePts.append([endPt[1], endPt[0]])
+    bornePts.insert(0,[startPt[1], startPt[0]])
+    print(bornePts)
     params = {
-        "coordinates": [
-            [startPt[1], startPt[0]],
-            [endPt[1], endPt[0]], 
-            #[5.8357, 50.7640] -> if suffit de rajouter les bornes dans l'ordre
-        ]
+        "coordinates": bornePts
     }
 
     # on recupère la réponse de l'api 
@@ -71,3 +72,58 @@ def path():
     
     # on retourne la réponse de l'api sous forme de json 
     return response.json()
+
+# avoir les bornes entre 2 points géographiques
+@route_bp.post("/APIborne")
+def borne():
+    data = request.json # on recupère la requette passée en entrée du post pour avoir les datas  
+    autonomie = int(data["carAuto"]) * 1000 # autonomie de la voiture, *1000 pour le mettre en mètre 
+    tabPath = data["tabPath"] # tous les points du chemin, longitude - latitude 
+
+    tabBorne = []
+    indice = 0 # indice du tableau de point 
+    autonomie80 = autonomie * 90 / 100
+    autonomie10 = autonomie * 10 / 100
+    # tant qu'il reste du chemin à parcourir 
+    while(indice < len(tabPath)-2):
+        # on va chercher le point où on est à 80% de l'autonomie de la voiture 
+        tempDist = 0 # distance temporaire pour faire la comparaison 
+        while(tempDist < autonomie80 and indice < (len(tabPath)-2)):
+            indice += 1 
+            tempDist += mt.sqrt((tabPath[indice+1][0] - tabPath[indice][0])**2 + (tabPath[indice+1][1] - tabPath[indice][1])**2) * 111000
+        # a partir de là, le point à partir duquel on cherche la borne est à tabPath[indice]
+        if (indice != (len(tabPath)-2)):
+            # on cherche où est la borne la plus proche à partir du point tabPath[indice]
+            borne = findOneBorne(tabPath[indice], autonomie10)
+
+            # gestion des erreurs
+            if(borne != [-1, -1]):
+                tabBorne.append(borne)
+            else:
+                # il faut une variable en plus pour mettre de coté la distance à rajouter au cas où 
+                # test avec une distance abusée 
+                borne = findOneBorne(tabPath[indice], autonomie)
+                tabBorne.append(borne)
+
+    return tabBorne
+
+# retrouve une seule borne à partir d'un point et d'une distance 
+def findOneBorne(point, distance):
+    # l'url de l'api https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve/records
+    url = "https://odre.opendatasoft.com/api/records/1.0/search/"
+    params = {
+        "dataset": "bornes-irve",
+        "rows": 1,
+        "geofilter.distance": f"{point[0]},{point[1]},{distance}"
+    }
+
+    # on recupère la réponse de l'api 
+    response = requests.get(url, params=params) 
+    response = response.json()
+    if(response["nhits"] != 0):
+        borne = response["records"][0]["fields"]["coordonneesxy"] # latitude, longitude 
+    else:
+        borne = [-1, -1]
+
+    # on retourne la réponse de l'api sous forme de json 
+    return borne
