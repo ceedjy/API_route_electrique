@@ -186,7 +186,7 @@
     });
     if (!res.ok) { throw new Error("Itinéraire introuvable. Veuillez réessayer."); } // gestion d'erreur 
     var data = await res.json(); // on retourne le résultat de l'itinéraire sous forme de json pour pouvoir mieux le lire
-    
+  
     return [data, bornePts];
   }
 

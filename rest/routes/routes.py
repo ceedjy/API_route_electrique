@@ -46,7 +46,7 @@ def city(city):
 @route_bp.post("/APIpath")
 def path():
     data = request.json # on recupère la requette passée en entrée du post pour avoir les datas  
-    startPt = data["startPt"] # TODO pour les bornes, ptetre mettre en param un tableau de points dans l'ordre
+    startPt = data["startPt"]
     endPt = data["endPt"]
     bornePts = data["bornePts"]
 
@@ -97,12 +97,18 @@ def borne():
             borne = findOneBorne(tabPath[indice], autonomie10)
 
             # gestion des erreurs
-            if(borne != [-1, -1]):
+            if(borne != [-1, -1]): 
                 tabBorne.append(borne)
             else:
-                # il faut une variable en plus pour mettre de coté la distance à rajouter au cas où 
-                # test avec une distance abusée 
-                borne = findOneBorne(tabPath[indice], autonomie)
+                # on a pas trouvé de borne à proximité 
+                autonomie25 = autonomie * 25 / 100
+                # on recule de 1/4 de l'autonomie 
+                tempDist = 0 # distance temporaire pour faire la comparaison 
+                while(tempDist < autonomie25 and indice < (len(tabPath)-2)):
+                    indice -= 1 
+                    tempDist += mt.sqrt((tabPath[indice+1][0] - tabPath[indice][0])**2 + (tabPath[indice+1][1] - tabPath[indice][1])**2) * 111000
+                # a partir de là, le point à partir duquel on cherche la borne est à tabPath[indice], on prend 1/4 de l'autonomie comme étant le rayon de recherche
+                borne = findOneBorne(tabPath[indice], autonomie25)
                 tabBorne.append(borne)
 
     return tabBorne
