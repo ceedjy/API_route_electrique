@@ -115,7 +115,7 @@ def borne():
 
 # retrouve une seule borne à partir d'un point et d'une distance 
 def findOneBorne(point, distance):
-    # l'url de l'api https://odre.opendatasoft.com/api/explore/v2.1/catalog/datasets/bornes-irve/records
+    # l'url de l'api
     url = "https://odre.opendatasoft.com/api/records/1.0/search/"
     params = {
         "dataset": "bornes-irve",
@@ -133,3 +133,61 @@ def findOneBorne(point, distance):
 
     # on retourne la réponse de l'api sous forme de json 
     return borne
+
+@route_bp.get("/APIcars")
+def cars():
+    url = "https://api.chargetrip.io/graphql"
+
+    headers = {
+        "Content-Type": "application/json",
+        "x-client-id": current_app.config["ROUTE_KEY_API_CLIENT_ID"],
+        "x-app-id": current_app.config["ROUTE_KEY_API_APP_ID"]
+    }
+
+    # $page, $size, $search : valeurs par default pour la version gratuite -> 0, 10, tous les véhicules
+    query = """
+    query vehicleList($page: Int, $size: Int, $search: String) {
+        vehicleList(
+            page: $page, 
+            size: $size, 
+            search: $search
+        ) {
+            id
+            naming {
+                make
+                model
+                chargetrip_version
+            }
+            range {
+                chargetrip_range {
+                    best
+                }
+            }
+            media {
+                image {
+                    thumbnail_url
+                }
+            }
+        }
+    }
+    """
+
+    response = requests.post(
+        url,
+        json={"query": query},
+        headers=headers
+    )
+
+    data = response.json()
+    cars = []
+    for car in data["data"]["vehicleList"]:
+        cars.append({
+            "id": car["id"],
+            "make": car["naming"]["make"],
+            "model": car["naming"]["model"],
+            "version": car["naming"]["chargetrip_version"],
+            "image": car["media"]["image"]["thumbnail_url"],
+            "autonomie": car["range"]["chargetrip_range"]["best"]
+        })
+
+    return cars

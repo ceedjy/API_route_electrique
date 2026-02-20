@@ -19,14 +19,21 @@
 
   <main class="container">
 
+    <div class="carrousel">
+      <troubadour id="carMake">Marque</troubadour> <troubadour id="carModel">modèle</troubadour> <br>
+      <troubadour id="carVersion">version</troubadour> <br>
+      <img src="" alt="carPicture" id="carImg"> <br>
+      <troubadour>Autonomie : </troubadour><troubadour id="carAutonomie">autonomie</troubadour> <br> <!-- mettre le fond d'une autre couleur -->
+      <button id="leftBtn">&lsaquo;-</button><button id="rightBtn">-&rsaquo;</button>
+    </div>
+    <br>
+
     <form id="formCity">
       <label for="strtCtyName">Indiquez votre ville de départ :</label></br>
       <input id="startCity" name="startCity" value="" /> </br>
       <label for="endCtyName">Indiquez votre ville d'arrivée :</label></br>
       <input id="endCity" name="endCity" value="" /> </br>
-      <label for="carAutoName">Indiquez l'autonomie de la voiture en km :</label></br>
-      <input id="carAuto" name="carAuto" value="" /> </br>
-      <input type="submit" value="Calculer l'itinéraire" />
+      <input type="submit" value="Calculer l'itinéraire" /> 
     </form>
 
   </main>
@@ -37,7 +44,6 @@
 
 
   <!-- initialisation de leaflet pour afficher la carte, exécuté en premier donc mis avant les autres scripts -->
-  <!-- on fait des clusters de marquers pour pouvoir mieux les effacer après -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     crossorigin=""
@@ -55,6 +61,7 @@
 
   <!-- fonctions qui appellent l'api qu'on a créé -->
   <script>
+  // *** La map ***
   // initialise la carte, centrée sur paris par défaut (L = leaflet)
   const map = L.map('map').setView([48.8566, 2.3522], 13);
 
@@ -64,8 +71,39 @@
       attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
+
+  // *** Récupération des voitures ***
+  try {
+    var cars; 
+    initPageCar();
+    //cars = cars.result;
+    console.log(cars);
+    // on met de coté un id pour savoir où on est dan sle tableau de voiture 
+    var indiceCars = 0;
+    // on ajoute des evenements si on appui sur les fleches
+    var leftBtn = document.getElementById("leftBtn");
+    var rightBtn = document.getElementById("rightBtn");
+    leftBtn.addEventListener("click", function (e) {
+      indiceCars--;
+      if (indiceCars == -1){
+        indiceCars = 9;
+      }
+      changeCarrousel(cars[indiceCars])
+    });
+    rightBtn.addEventListener("click", function (e) {
+      indiceCars++;
+      if (indiceCars == 10){
+        indiceCars = 0;
+      }
+      changeCarrousel(cars[indiceCars]);
+    });
+  } catch (err) { 
+    var message = "Erreur lors de l’appel API (voiture). Veuillez réessayer. \nL'erreur renvoyée est la suivante : " + err;
+    alert(message); 
+  } 
   
-  // *** formulaire pour les villes -> avoir l'ininéraire ***
+
+  // *** Formulaire pour les villes -> avoir l'ininéraire ***
   var formCity = document.getElementById("formCity");
   // on crée des clusters de marker pour pouvoir mieux les gérer en groupe 
   var markers = L.markerClusterGroup();
@@ -107,7 +145,7 @@
     // on récupère les valeurs entrées dans le formulaire 
     var startCity = document.getElementById("startCity").value;
     var endCity = document.getElementById("endCity").value;
-    var carAuto = document.getElementById("carAuto").value;
+    var carAuto = document.querySelector("#carAutonomie").textContent;
 
     // on appelle les fonctions async en appelant l'api globale (celle qu'on a crée)
     try {
@@ -144,7 +182,7 @@
       }
 
     } catch (err) { // gestion d'erreur 
-      result.textContent = "Erreur lors de l’appel API (itinéraire). veuillez réessayer."; // ICI 
+      //result.textContent = "Erreur lors de l’appel API (itinéraire). veuillez réessayer."; // ICI 
       var message = "Erreur lors de l’appel API (itinéraire). Veuillez réessayer. \nL'erreur renvoyée est la suivante : " + err;
       alert(message); 
     }
@@ -202,15 +240,55 @@
     return [data, bornePts];
   }
 
+  // permet d'appeler l'api pour avoir la liste des voitures
+  async function getListCars() {
+    // on appelle l'api et on récupère le résultat 
+    var res = await fetch(`/api/APIcars`); 
+    // gestion d'erreur 
+    if (!res.ok) { throw new Error("voitures introuvable. Veuillez réessayer."); }
+    // on met la réponse sous forme de json pour mieux la lire 
+    var data = await res.json();
+    console.log(data);
+    // on retourne dans un tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
+    return data;
+  }
+
+  async function initPageCar(){
+    // on appelle l'api pour avoir la liste des voitures 
+    cars = await getListCars();
+    // on remplace les informations par la première voiture 
+    changeCarrousel(cars[0]);
+  }
+
+  function changeCarrousel(jsonInfo){
+    // on recupère les elements a modifier 
+    var carMake = document.querySelector("#carMake");
+    var carModel = document.querySelector("#carModel");
+    var carVersion = document.querySelector("#carVersion");
+    var carImg = document.querySelector("#carImg");
+    var carAutonomie = document.querySelector("#carAutonomie");
+    // on change ces elements 
+    carMake.textContent = jsonInfo["make"];
+    carModel.textContent = jsonInfo["model"];
+    carVersion.textContent = jsonInfo["version"];
+    carImg.src = jsonInfo["image"];
+    carAutonomie.textContent = jsonInfo["autonomie"];
+  }
 
   // TODO : 
   // x faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
-  // - lier le soap 
+  // - lier le soap :
+  //  - le lier au niveau du code
+  //  - lier les données pour afficher les bonnes choses 
   // x faire avec les bornes 
   // x voir comment avoir le point de l'itinéraire après un certain nb de km après le départ / au autre point 
   // x faire attention de ne pas dépasser l'autonomie de la voiture 
   // x faire en sorte de recalculer l'itinéraire après avoir toutes les bornes
-  // - faire avec l'api des voitures 
+  // x faire avec l'api des voitures :
+  //  x faire la route 
+  //  x faire le carousel 
+  //  x faire le lien entre carousel et données 
+  //  x lier le formulaire de l'autonomie avec les données
   // - mettre des popup pour les erreurs 
 
 </script>
