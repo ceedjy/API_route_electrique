@@ -1,9 +1,14 @@
 from flask import Blueprint, request, jsonify, render_template, current_app
 import requests
 import math as mt
+import zeep
 
 route_bp = Blueprint("route_bp", __name__)
 main_bp = Blueprint("main", __name__)
+
+# pour le soap :
+wsdl = 'http://127.0.0.1:8000/?wsdl'
+clientZeep = zeep.Client(wsdl=wsdl)
 
 # route principale 
 @main_bp.route("/")
@@ -191,3 +196,14 @@ def cars():
         })
 
     return cars
+
+@route_bp.get("/APItime/<speed>/<distance>/<chargeTime>/<nbCharge>")
+def time(speed, distance, chargeTime, nbCharge):
+    #temp = float(distance) /float(speed) + float(chargeTime)*int(nbCharge)
+    #return {"res": str(temp)}
+    return clientZeep.service.time(float(speed), float(distance), float(chargeTime), int(nbCharge))
+
+@route_bp.get("/APIcout/<coutOneBorne>/<nbCharge>")
+def cout(coutOneBorne, nbCharge):
+    #return {"res": str(float(coutOneBorne) * int(nbCharge))}
+    return clientZeep.service.cout(float(coutOneBorne), int(nbCharge))

@@ -6,8 +6,8 @@ from spyne.protocol.soap import Soap11
 
 class HelloWorldService(ServiceBase):
     @rpc(float, float, _returns=str)
-    def temps(ctx, v, dist): # vitesse moyenne en km/h et distance en km 
-        tps = dist/v
+    def time(ctx, v, dist, tpsChargement, nbBorne): # vitesse moyenne en km/h, distance en km, tpsChargement en minutes
+        tps = dist/v + (tpsChargement/60)*nbBorne
         if tps < 1 : # tps est en heure 
             # mettre en minutes 
             m = int((tps % 1)*60)
@@ -20,9 +20,9 @@ class HelloWorldService(ServiceBase):
         return res 
 
     @rpc(float, float, _returns=str)
-    def cout(ctx, coutParKm, dist): # cout par km/h en € et distance en km TODO : refaire en prenant compte de l'autonomie et du tps de chargement
-        cout = coutParKm * dist
-        return str(cout) + "€"
+    def cout(ctx, coutParBorne, nbBorne):
+        cout = coutParBorne * nbBorne
+        return str(cout)
     
 application = Application(
     [HelloWorldService], 

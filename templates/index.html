@@ -23,8 +23,15 @@
       <troubadour id="carMake">Marque</troubadour> <troubadour id="carModel">modèle</troubadour> <br>
       <troubadour id="carVersion">version</troubadour> <br>
       <img src="" alt="carPicture" id="carImg"> <br>
-      <troubadour>Autonomie : </troubadour><troubadour id="carAutonomie">autonomie</troubadour> <br> <!-- mettre le fond d'une autre couleur -->
+      <troubadour>Autonomie : </troubadour><troubadour id="carAutonomie">autonomie</troubadour> <br><br> <!-- mettre le fond d'une autre couleur -->
       <button id="leftBtn">&lsaquo;-</button><button id="rightBtn">-&rsaquo;</button>
+    </div>
+    <br>
+
+    <div id="distanceDiv" class="loader-hidden"> <!-- mettre le fond d'une autre couleur -->
+      <abc>Distance : </abc><abc id="carDistance"></abc><abc> km</abc> <br>
+      <abc>Temps : </abc><abc id="carTime"></abc> <br>
+      <abc>Cout : </abc><abc id="carCout"></abc><abc> €</abc>
     </div>
     <br>
 
@@ -33,8 +40,15 @@
       <input id="startCity" name="startCity" value="" /> </br>
       <label for="endCtyName">Indiquez votre ville d'arrivée :</label></br>
       <input id="endCity" name="endCity" value="" /> </br>
+      <label for="chargingTimeName">Indiquez le temps de chargement de la voiture en minutes :</label></br>
+      <input id="chargingTime" name="chargingTime" value="30" /> </br>
+      <label for="chargingCoutName">Indiquez le cout d'une recharge en euro :</label></br>
+      <input id="chargingCout" name="chargingCout" value="3.50" /> </br>
+      <label for="speedName">Indiquez la vitesse moyenne en km/h :</label></br>
+      <input id="speed" name="speed" value="80" /> </br>
       <input type="submit" value="Calculer l'itinéraire" /> 
     </form>
+    <br>
 
   </main>
 
@@ -76,9 +90,7 @@
   try {
     var cars; 
     initPageCar();
-    //cars = cars.result;
-    console.log(cars);
-    // on met de coté un id pour savoir où on est dan sle tableau de voiture 
+    // on met de coté un id pour savoir où on est dans le tableau de voiture 
     var indiceCars = 0;
     // on ajoute des evenements si on appui sur les fleches
     var leftBtn = document.getElementById("leftBtn");
@@ -149,14 +161,29 @@
 
     // on appelle les fonctions async en appelant l'api globale (celle qu'on a crée)
     try {
-      // * on récupère les informations qu'on a besoin *
+      // * on récupère/modifie les informations qu'on a besoin *
       // on récupère les coordonnées géographiques des villes d'arrivée et de départ
       var startPt = await findPtFromCity(startCity);
       var endPt = await findPtFromCity(endCity);
-      // on récupère l'itinéraire (pour l'instant sans les bornes)
+      // on récupère l'itinéraire complet avec les bornes
       tabTemp = await findPath(startPt, endPt, carAuto); 
       path = tabTemp[0];
       tabBorne = tabTemp[1];
+      // on modifie la distance
+      var distanceDiv = document.getElementById("distanceDiv");
+      distanceDiv.classList.remove("loader-hidden");
+      var carDistance = document.getElementById("carDistance");
+      carDistance.textContent = path["features"][0]["properties"]["summary"]["distance"] / 1000; // on divise par 1000 pour le mettre en km
+      // on modifie le temps 
+      var speed = document.getElementById("speed").value;
+      var chargeTime = document.getElementById("chargingTime").value;
+      var nbCharge = tabBorne.length;
+      var carTime = document.getElementById("carTime");
+      carTime.textContent = await getTime(speed, carDistance.textContent, chargeTime, nbCharge);
+      // on modifie le cout 
+      var chargingCout = document.getElementById("chargingCout").value;
+      var carCout = document.getElementById("carCout");
+      carCout.textContent = await getCout(chargingCout, nbCharge);
 
       // * on affiche la route de l'itinéraire *
       // on enlève le précédent itinéraire (le calque)
@@ -248,7 +275,6 @@
     if (!res.ok) { throw new Error("voitures introuvable. Veuillez réessayer."); }
     // on met la réponse sous forme de json pour mieux la lire 
     var data = await res.json();
-    console.log(data);
     // on retourne dans un tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
     return data;
   }
@@ -274,6 +300,31 @@
     carImg.src = jsonInfo["image"];
     carAutonomie.textContent = jsonInfo["autonomie"];
   }
+
+  // permet d'appeler l'api pour avoir le temps du trajet 
+  async function getTime(speed, distance, chargeTime, nbCharge) {
+    // on appelle l'api et on récupère le résultat 
+    var res = await fetch(`/api/APItime/${encodeURIComponent(speed)}/${encodeURIComponent(distance)}/${encodeURIComponent(chargeTime)}/${encodeURIComponent(nbCharge)}`); // encodeURIComponent permet de transformer en string compatible
+    // gestion d'erreur 
+    if (!res.ok) { throw new Error("Temps introuvable. Veuillez réessayer."); }
+    // on met la réponse sous forme de json pour mieux la lire 
+    var data = await res.json();
+    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
+    return data.res;
+  }
+
+  // permet d'appeler l'api pour avoir le cout du trajet 
+  async function getCout(chargeCout, nbCharge) {
+    // on appelle l'api et on récupère le résultat 
+    var res = await fetch(`/api/APIcout/${encodeURIComponent(chargeCout)}/${encodeURIComponent(nbCharge)}`); // encodeURIComponent permet de transformer en string compatible
+    // gestion d'erreur 
+    if (!res.ok) { throw new Error("Cout introuvable. Veuillez réessayer."); }
+    // on met la réponse sous forme de json pour mieux la lire 
+    var data = await res.json();
+    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
+    return data.res;
+  }
+
 
   // TODO : 
   // x faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
