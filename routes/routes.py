@@ -199,11 +199,15 @@ def cars():
 
 @route_bp.get("/APItime/<speed>/<distance>/<chargeTime>/<nbCharge>")
 def time(speed, distance, chargeTime, nbCharge):
-    #temp = float(distance) /float(speed) + float(chargeTime)*int(nbCharge)
-    #return {"res": str(temp)}
-    return clientZeep.service.time(float(speed), float(distance), float(chargeTime), int(nbCharge))
+    # temp = float(distance) /float(speed) + float(chargeTime)*int(nbCharge)
+    # return {"res": str(temp)}
+    res = clientZeep.service.time(float(speed), float(distance), float(chargeTime), int(nbCharge))
+    print(res)
+    return res
 
 @route_bp.get("/APIcout/<coutOneBorne>/<nbCharge>")
 def cout(coutOneBorne, nbCharge):
-    #return {"res": str(float(coutOneBorne) * int(nbCharge))}
-    return clientZeep.service.cout(float(coutOneBorne), int(nbCharge))
+    # return {"res": str(float(coutOneBorne) * int(nbCharge))}
+    res = clientZeep.service.cout(float(coutOneBorne), int(nbCharge))
+    print(res)
+    return res

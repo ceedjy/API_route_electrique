@@ -5,7 +5,7 @@ from spyne.server.wsgi import WsgiApplication
 from spyne.protocol.soap import Soap11
 
 class HelloWorldService(ServiceBase):
-    @rpc(float, float, _returns=str)
+    @rpc(float, float, float, int, _returns=str)
     def time(ctx, v, dist, tpsChargement, nbBorne): # vitesse moyenne en km/h, distance en km, tpsChargement en minutes
         tps = dist/v + (tpsChargement/60)*nbBorne
         if tps < 1 : # tps est en heure 
@@ -16,10 +16,12 @@ class HelloWorldService(ServiceBase):
             # mettre en heure 
             h = int(tps)
             m = int((tps % 1)*60) 
+            if (m<10):
+                m = '0' + str(m)
             res = str(h) + 'h' + str(m)
         return res 
 
-    @rpc(float, float, _returns=str)
+    @rpc(float, int, _returns=str)
     def cout(ctx, coutParBorne, nbBorne):
         cout = coutParBorne * nbBorne
         return str(cout)

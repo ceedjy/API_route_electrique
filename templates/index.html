@@ -23,7 +23,7 @@
       <troubadour id="carMake">Marque</troubadour> <troubadour id="carModel">modèle</troubadour> <br>
       <troubadour id="carVersion">version</troubadour> <br>
       <img src="" alt="carPicture" id="carImg"> <br>
-      <troubadour>Autonomie : </troubadour><troubadour id="carAutonomie">autonomie</troubadour> <br><br> <!-- mettre le fond d'une autre couleur -->
+      <troubadour>Autonomie : </troubadour><troubadour id="carAutonomie">autonomie</troubadour><troubadour> km</troubadour> <br><br> <!-- mettre le fond d'une autre couleur -->
       <button id="leftBtn">&lsaquo;-</button><button id="rightBtn">-&rsaquo;</button>
     </div>
     <br>
@@ -43,7 +43,7 @@
       <label for="chargingTimeName">Indiquez le temps de chargement de la voiture en minutes :</label></br>
       <input id="chargingTime" name="chargingTime" value="30" /> </br>
       <label for="chargingCoutName">Indiquez le cout d'une recharge en euro :</label></br>
-      <input id="chargingCout" name="chargingCout" value="3.50" /> </br>
+      <input id="chargingCout" name="chargingCout" value="7.50" /> </br>
       <label for="speedName">Indiquez la vitesse moyenne en km/h :</label></br>
       <input id="speed" name="speed" value="80" /> </br>
       <input type="submit" value="Calculer l'itinéraire" /> 
@@ -307,10 +307,11 @@
     var res = await fetch(`/api/APItime/${encodeURIComponent(speed)}/${encodeURIComponent(distance)}/${encodeURIComponent(chargeTime)}/${encodeURIComponent(nbCharge)}`); // encodeURIComponent permet de transformer en string compatible
     // gestion d'erreur 
     if (!res.ok) { throw new Error("Temps introuvable. Veuillez réessayer."); }
-    // on met la réponse sous forme de json pour mieux la lire 
-    var data = await res.json();
+    // // on met la réponse sous forme de json pour mieux la lire 
+    // var data = await res.json();
+    // console.log(data);
     // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
-    return data.res;
+    return res.text();
   }
 
   // permet d'appeler l'api pour avoir le cout du trajet 
@@ -320,9 +321,10 @@
     // gestion d'erreur 
     if (!res.ok) { throw new Error("Cout introuvable. Veuillez réessayer."); }
     // on met la réponse sous forme de json pour mieux la lire 
-    var data = await res.json();
+    // var data = await res.json();
+    // console.log(data);
     // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
-    return data.res;
+    return res.text();
   }
 
 
