@@ -2,12 +2,14 @@ from flask import Blueprint, request, jsonify, render_template, current_app
 import requests
 import math as mt
 import zeep
+import os
 
 route_bp = Blueprint("route_bp", __name__)
 main_bp = Blueprint("main", __name__)
 
 # pour le soap :
-wsdl = 'http://127.0.0.1:8000/?wsdl'
+#wsdl = 'http://127.0.0.1:8000/?wsdl'
+wsdl = os.getenv("SOAP_URL", "http://127.0.0.1:8000/?wsdl")
 clientZeep = zeep.Client(wsdl=wsdl)
 
 # route principale 

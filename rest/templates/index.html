@@ -307,10 +307,6 @@
     var res = await fetch(`/api/APItime/${encodeURIComponent(speed)}/${encodeURIComponent(distance)}/${encodeURIComponent(chargeTime)}/${encodeURIComponent(nbCharge)}`); // encodeURIComponent permet de transformer en string compatible
     // gestion d'erreur 
     if (!res.ok) { throw new Error("Temps introuvable. Veuillez réessayer."); }
-    // // on met la réponse sous forme de json pour mieux la lire 
-    // var data = await res.json();
-    // console.log(data);
-    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
     return res.text();
   }
 
@@ -320,29 +316,8 @@
     var res = await fetch(`/api/APIcout/${encodeURIComponent(chargeCout)}/${encodeURIComponent(nbCharge)}`); // encodeURIComponent permet de transformer en string compatible
     // gestion d'erreur 
     if (!res.ok) { throw new Error("Cout introuvable. Veuillez réessayer."); }
-    // on met la réponse sous forme de json pour mieux la lire 
-    // var data = await res.json();
-    // console.log(data);
-    // on retourne dan sun tableau que ce qui nous intéresse, ce qui nous donne les coordonnée de la ville
     return res.text();
   }
-
-
-  // TODO : 
-  // x faire en sorte d'avoir un écran de chargement pour le calcul de l'itinéraire 
-  // - lier le soap :
-  //  - le lier au niveau du code
-  //  - lier les données pour afficher les bonnes choses 
-  // x faire avec les bornes 
-  // x voir comment avoir le point de l'itinéraire après un certain nb de km après le départ / au autre point 
-  // x faire attention de ne pas dépasser l'autonomie de la voiture 
-  // x faire en sorte de recalculer l'itinéraire après avoir toutes les bornes
-  // x faire avec l'api des voitures :
-  //  x faire la route 
-  //  x faire le carousel 
-  //  x faire le lien entre carousel et données 
-  //  x lier le formulaire de l'autonomie avec les données
-  // - mettre des popup pour les erreurs 
 
 </script>
 </body>
