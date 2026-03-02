@@ -249,7 +249,7 @@
     var res = await fetch("/api/APIborne", {            
       method: "POST",
       headers: { "Content-Type": "application/json" },  // le header utile pour faire la méthode post
-      body: JSON.stringify({carAuto, tabPath}) // changer ça pour prendre en param le start, le end et le carauto et le 
+      body: JSON.stringify({carAuto, tabPath})
     });
     if (!res.ok) { throw new Error("Api de borne inaccessible."); } // gestion d'erreur 
     borne = await res.json(); // on retourne le résultat de la borne sous forme de json  
