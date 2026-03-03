@@ -8,7 +8,7 @@ The url for this API is (without endpoint) : https://info802-rest-cass-gdhbc3ded
 ## Endpoint : /APIcity/'city'
 ### Description :
 This route gives you the geographic coordinates of a city. <br>
-This is a GET route.
+This is a GET request.
 ### Parameters :
 ```
 city : A city name, a string
@@ -28,7 +28,7 @@ https://nominatim.org/
 ## Endpoint : /APIpath 
 ### Description :
 This route gives you the path between two geographic coordinates. <br>
-This is a POST route. 
+This is a POST request. 
 ### Parameters :
 A JSON with this format : <br>
 ```
@@ -47,7 +47,7 @@ https://openrouteservice.org/
 ## Endpoint : /APIborne 
 ### Description : 
 This route gives you all the charging station near a path based on the range of the car. <br>
-This is a POST route. 
+This is a POST request. 
 ### Parameters : 
 A JSON with this format : <br>
 ```
@@ -65,7 +65,7 @@ https://public.opendatasoft.com/explore/assets/georef-france-commune/
 ## Endpoint : /APIcars
 ### Description : 
 This route gives you a list of cars to use for your trip. <br>
-This is a GET route. 
+This is a GET request. 
 ### Parameters : 
 None. 
 ### Return : 
@@ -87,7 +87,7 @@ https://www.chargetrip.com/
 ## Endpoint : /APItime/'speed'/'distance'/'chargeTime'/'nbCharge'
 ### Description :
 This route gives you the time of your trip through a SOAP API. <br>
-This is a GET route. 
+This is a GET request. 
 ### Parameters :
 A JSON with this format : <br>
 ```
@@ -109,7 +109,7 @@ No API key required.
 ## Endpoint : /APIcout/'coutOneBorne'/'nbCharge'
 ### Description :
 This route gives you the total cost of your trip through a SOAP API. <br>
-This is a GET route. 
+This is a GET request. 
 ### Parameters :
 A JSON with this format : <br>
 ```
