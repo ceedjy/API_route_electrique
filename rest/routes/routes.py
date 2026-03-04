@@ -32,7 +32,7 @@ def city(city):
         "limit" : 1
     }
     headers = {
-        'User-Agent': 'info802app' # les param demandés par l'API, c'est une clé d'api sans clé d'api ??? 
+        'User-Agent': 'info802app' # les param demandés par l'API, c'est une clé d'api sans clé d'api
     }
 
     # on recupère la réponse de l'api 
@@ -53,7 +53,7 @@ def city(city):
 @route_bp.post("/APIpath")
 def path():
     data = request.json # on recupère la requette passée en entrée du post pour avoir les datas  
-    startPt = data["startPt"]
+    startPt = data["startPt"] # latitude / longitude 
     endPt = data["endPt"]
     bornePts = data["bornePts"]
 
@@ -67,7 +67,7 @@ def path():
     }
 
     # les paramètres d'entrée, on veut les points de passage dans l'ordre avec en premier le point de départ et en dernier le point d'arrivée (latitude et longitude inversés car c'est ce que demande l'api)
-    bornePts.append([endPt[1], endPt[0]])
+    bornePts.append([endPt[1], endPt[0]]) # longitude / latitude 
     bornePts.insert(0,[startPt[1], startPt[0]])
     print(bornePts)
     params = {
@@ -152,7 +152,7 @@ def cars():
         "x-app-id": current_app.config["ROUTE_KEY_API_APP_ID"]
     }
 
-    # $page, $size, $search : valeurs par default pour la version gratuite -> 0, 10, tous les véhicules
+    # $page, $size, $search : valeurs par default pour la version gratuite -> page 0, 10 véhicules, sur tous les véhicules
     query = """
     query vehicleList($page: Int, $size: Int, $search: String) {
         vehicleList(
